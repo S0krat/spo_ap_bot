@@ -1,21 +1,17 @@
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+import json
 
-TOKEN_API = "6209644592:AAEkRoaDzFfFa1F6OxfoWmCjhhAlCkb-dxU"
-HELP_COMMAND = """ 🤡<b>КОМАНДЫ БОТА</b>🤡
-<b>Тесты</b> - <em>Тесты</em>
-<b>История команды</b> - <em>История команды</em>
-<b>Конспекты</b> - <em>Конспекты</em>
-<b>Дайджест</b> - <em>Дайджест</em>"""
+with open("config.json", 'r') as cfg:
+    config = json.loads(cfg.read())
 
-f = open('history.txt', 'r', encoding='UTF-8')
-history = f.read()
-f.close()
-f = open('digest.txt', 'r', encoding='UTF-8')
-digest = f.read()
-f.close()
+with open('txtfiles/history.txt', 'r', encoding='UTF-8') as file:
+    history = file.read()
 
-bot = Bot(TOKEN_API)
+with open('txtfiles/diegest.txt', 'r', encoding='UTF-8') as file:
+    digest = file.read()
+
+bot = Bot(config['TOKEN_API'])
 dp = Dispatcher(bot)
 
 kb = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -29,20 +25,9 @@ kb.add(tests_key).insert(history_key).add(notes_key).insert(digest_key)
 @dp.message_handler(commands=['start'])
 async def start_command(message: types.Message):
     await bot.send_message(chat_id=message.chat.id,
-                           text="Привет! Я бот...\nНапиши 🥵 /help 🥵 для вывода всех команд.",
+                           text="Привет! Я бот...\nИспользуй клавиатуру для взаимодействия со мной.",
                            reply_markup=kb)
     await message.delete()
-
-
-@dp.message_handler(commands=['help'])
-async def help_command(message: types.Message):
-    await message.answer(text=HELP_COMMAND, parse_mode="HTML")
-
-
-@dp.message_handler(commands=['sticker'])
-async def sticker_command(message: types.Message):
-    await bot.send_sticker(chat_id=message.chat.id,
-                           sticker="CAACAgIAAxkBAAEH9IZj_3URiPgO1XGM3J_U7DHziqpJGgACEyIAAoaSSUumfyCbHPyBqS4E")
 
 
 @dp.message_handler()
