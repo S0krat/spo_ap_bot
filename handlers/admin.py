@@ -46,8 +46,8 @@ async def message_command(message: types.Message):
         mes = message.text[9:]
         if mes:
             user_ids = get_user_ids()
-            for user_id in user_ids[0]:
-                await bot.send_message(chat_id=user_id, text=mes)
+            for user_id in user_ids:
+                await bot.send_message(chat_id=user_id[0], text=mes)
         else:
             await message.answer("Данная команда работает так:\n/message text\nВсем участникам придет сообщение 'text'")
     else:
