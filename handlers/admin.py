@@ -2,7 +2,8 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.dispatcher import FSMContext
 import json
-from start_bot import config
+from start_bot import config, bot
+from database.sqlite_db import get_user_ids, check_member
 
 
 class AdminStatesGroup(StatesGroup):  # Класс, где хранятся все состояния
@@ -38,6 +39,19 @@ async def delete_command(message: types.Message):
         await AdminStatesGroup.get_del_number_from_admin.set()
     else:
         await message.answer("У тебя нет доступа к этому действию 😡")
+
+
+async def message_command(message: types.Message):
+    if check_member(message.from_user.id)[0][0] == 1:
+        mes = message.text[9:]
+        if mes:
+            user_ids = get_user_ids()
+            for user_id in user_ids[0]:
+                await bot.send_message(chat_id=user_id, text=mes)
+        else:
+            await message.answer("Данная команда работает так:\n/message text\nВсем участникам придет сообщение 'text'")
+    else:
+        await message.answer("У тебя нет прав на это действие")
 
 
 async def get_file_from_admin(message: types.Message, state: FSMContext):
@@ -88,6 +102,7 @@ async def get_del_number_from_admin(message: types.Message, state: FSMContext):
 def register_handlers_admin(dispatcher: Dispatcher):
     dispatcher.register_message_handler(create_command, commands=['create'])
     dispatcher.register_message_handler(delete_command, commands=['delete'])
+    dispatcher.register_message_handler(message_command, commands=['message'])
     dispatcher.register_message_handler(get_file_from_admin, content_types=['document'],
                                         state=AdminStatesGroup.get_file_from_admin)
     dispatcher.register_message_handler(gffa_exception, content_types=['text'],

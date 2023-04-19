@@ -23,10 +23,11 @@ async def start_command(message: types.Message):
         notes_key = KeyboardButton("Конспекты")
         digest_key = KeyboardButton("Дайджест")
         kb.add(tests_key).insert(history_key).add(notes_key).insert(digest_key)
-        if status[0]:
+        if status[0][0]:
             await bot.send_message(chat_id=message.chat.id,
                                    text="Ты администратор данного бота!\nТебе доступны команды:\n"
-                                        "/create - Добавить новый файл в бота\n/delete - удалить файл из бота",
+                                        "/create - Добавить новый файл в бота\n/delete - удалить файл из бота\n/message"
+                                        " - создать рассылку сообщений всем пользователям.",
                                    reply_markup=kb)
         else:
             await bot.send_message(chat_id=message.chat.id,
@@ -148,9 +149,9 @@ async def get_test_answer(message: types.Message, state: FSMContext):
 
 def register_handlers_user(dispatcher: Dispatcher):
     dispatcher.register_message_handler(start_command, commands=['start'])
-    dispatcher.register_message_handler(unclear_command)
     dispatcher.register_message_handler(cancel_command, commands=['cancel'], state='*')
     dispatcher.register_message_handler(get_name, state=UserStatesGroup.get_name)
     dispatcher.register_message_handler(get_file_number, state=UserStatesGroup.get_file_number)
     dispatcher.register_message_handler(get_test_number, state=UserStatesGroup.get_test_number)
     dispatcher.register_message_handler(get_test_answer, state=UserStatesGroup.get_test_answer)
+    dispatcher.register_message_handler(unclear_command)
