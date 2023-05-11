@@ -23,3 +23,8 @@ def add_new_member(data):
     query = 'INSERT INTO users (id, admin, name) VALUES (?, 0, ?)'
     cur.execute(query, data)
     base.commit()
+
+
+def get_user_ids():
+    cur.execute(f"SELECT id FROM users")
+    return cur.fetchall()
