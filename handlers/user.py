@@ -22,7 +22,8 @@ async def start_command(message: types.Message):
         history_key = KeyboardButton("История команды")
         notes_key = KeyboardButton("Конспекты")
         digest_key = KeyboardButton("Дайджест")
-        kb.add(tests_key).insert(history_key).add(notes_key).insert(digest_key)
+        songs_key = KeyboardButton("Песенник")
+        kb.add(tests_key).insert(history_key).add(notes_key).insert(digest_key).add(songs_key)
         if status[0][0]:
             await bot.send_message(chat_id=message.chat.id,
                                    text="Ты администратор данного бота!\nТебе доступны команды:\n"
@@ -69,6 +70,8 @@ async def unclear_command(message: types.Message):  # Обработчик лю�
             await message.answer(text="Конспектов пока что нет 🥺")
     elif message.text == "Дайджест":
         await message.answer(text=digest)
+    elif message.text == "Песенник":
+        await message.reply_document(open('Pesennik_AP.pdf', 'rb'))
     else:
         await message.answer(text="Я не понимаю этого сообщения 🥺")
 
