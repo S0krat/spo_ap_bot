@@ -10,6 +10,7 @@ class AdminStatesGroup(StatesGroup):  # Класс, где хранятся вс
     get_file_from_admin = State()
     get_file_name_from_admin = State()
     get_del_number_from_admin = State()
+    pic_or_text = State()
 
 
 async def create_command(message: types.Message):
@@ -41,17 +42,40 @@ async def delete_command(message: types.Message):
         await message.answer("У тебя нет доступа к этому действию 😡")
 
 
-async def message_command(message: types.Message):
+async def message_command(message: types.Message, state: FSMContext):
     if check_member(message.from_user.id)[0][0] == 1:
         mes = message.text[9:]
         if mes:
-            user_ids = get_user_ids()
-            for user_id in user_ids:
-                await bot.send_message(chat_id=user_id[0], text=mes)
+            await message.answer("Отправь картинку, если хочешь дополнить текст рассылки картинкой\n"
+                                 "Отправь 'Нет', если хочешь отправить сообщение без картинки")
+            await AdminStatesGroup.pic_or_text.set()
+            async with state.proxy() as data:
+                data['mes'] = mes
         else:
-            await message.answer("Данная команда работает так:\n/message text\nВсем участникам придет сообщение 'text'")
+            await message.answer("Данная команда работает так:\n/message text\nПосле этого я спрошу у тебя, "
+                                 "хочешь ли ты добавить картинку к тексту или нет")
     else:
         await message.answer("У тебя нет прав на это действие")
+
+
+async def pic_message(message: types.Message, state: FSMContext):
+    photo = message.photo[0].file_id
+    async with state.proxy() as data:
+        user_ids = get_user_ids()
+        for user_id in user_ids:
+            await bot.send_photo(chat_id=user_id[0], photo=photo, caption=data['mes'])
+    await state.finish()
+
+
+async def text_message(message: types.Message, state: FSMContext):
+    if message.text.lower() == "нет":
+        async with state.proxy() as data:
+            await bot.send_message(message.chat.id, text=data['mes'])
+        await state.finish()
+    else:
+        await message.answer("Отправь картинку, если хочешь дополнить текст рассылки картинкой\n"
+                             "Отправь 'Нет', если хочешь отправить сообщение без картинки\n"
+                             "Отправь '/cancel', если хочешь отменить процедуру рассылки.")
 
 
 async def get_file_from_admin(message: types.Message, state: FSMContext):
@@ -63,7 +87,7 @@ async def get_file_from_admin(message: types.Message, state: FSMContext):
 
 
 async def gffa_exception(message: types.Message, state: FSMContext):
-    await message.answer("Я жду от тебя файл, а не признание в любви!\n"
+    await message.answer("Я жду от тебя файл!\n"
                          "Если хочешь отменить предыдущее действие напиши /cancel")
 
 
@@ -103,10 +127,15 @@ def register_handlers_admin(dispatcher: Dispatcher):
     dispatcher.register_message_handler(create_command, commands=['create'])
     dispatcher.register_message_handler(delete_command, commands=['delete'])
     dispatcher.register_message_handler(message_command, commands=['message'])
+    dispatcher.register_message_handler(pic_message, content_types=['photo'],
+                                        state=AdminStatesGroup.pic_or_text)
+    dispatcher.register_message_handler(text_message,
+                                        state=AdminStatesGroup.pic_or_text)
     dispatcher.register_message_handler(get_file_from_admin, content_types=['document'],
                                         state=AdminStatesGroup.get_file_from_admin)
     dispatcher.register_message_handler(gffa_exception, content_types=['text'],
                                         state=AdminStatesGroup.get_file_from_admin)
-    dispatcher.register_message_handler(get_file_name_from_admin, state=AdminStatesGroup.get_file_name_from_admin)
+    dispatcher.register_message_handler(get_file_name_from_admin,
+                                        state=AdminStatesGroup.get_file_name_from_admin)
     dispatcher.register_message_handler(get_del_number_from_admin, content_types=['text'],
                                         state=AdminStatesGroup.get_del_number_from_admin)
